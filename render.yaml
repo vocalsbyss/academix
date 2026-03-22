@@ -2,8 +2,8 @@ services:
   - type: web
     name: academix-ai-backend
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: pip install -r "python backend/requirements.txt"
+    startCommand: gunicorn --chdir "python backend" app:app
     envVars:
       - key: MONGO_URI
         sync: false
