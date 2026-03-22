@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="auth-intro">
+        <h1 class="page-title gradient-text">Welcome back</h1>
+        <p class="page-subtitle">
+            Sign in to continue your conversations with the Academix AI assistant,
+            explore rooms, and pick up exactly where you left off.
+        </p>
+        <ul class="feature-list">
+            <li><span class="dot"></span>Smart intent &amp; topic detection</li>
+            <li><span class="dot"></span>Room‑based, persistent conversations</li>
+            <li><span class="dot"></span>Keyword‑driven knowledge surfacing</li>
+        </ul>
+    </div>
+
+    <form method="post" class="auth-card slide-up">
+        <h2 class="auth-title">Sign in</h2>
+
+        <label class="field">
+            <span class="field-label">Username</span>
+            <input name="username" placeholder="Enter your username" required autocomplete="username">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Password</span>
+            <input name="password" type="password" placeholder="Enter your password" required autocomplete="current-password">
+        </label>
+
+        <button class="btn btn-primary btn-full" type="submit">
+            <span>Login</span>
+            <span class="btn-glow"></span>
+        </button>
+
+        <p class="auth-switch">
+            New here?
+            <a href="{{ url_for('register') }}">Create an account</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

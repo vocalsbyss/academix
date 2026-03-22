@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz{% endblock %}
+
+{% block content %}
+<div class="rooms-layout">
+    <div class="rooms-header">
+        <div>
+            {% if stage == "questions" %}
+                <h1 class="page-title gradient-text">Quiz on {{ topic }}</h1>
+                <p class="page-subtitle">
+                    <span class="difficulty-badge difficulty-{{ difficulty }}">{{ difficulty|capitalize }}</span>
+                    &nbsp;Answer all <strong>{{ questions|length }}</strong> questions to earn <strong>+20 XP</strong>.
+                </p>
+            {% elif stage == "select_difficulty" %}
+                <h1 class="page-title gradient-text">Choose your level</h1>
+                <p class="page-subtitle">Topic: <strong>{{ topic }}</strong></p>
+            {% else %}
+                <h1 class="page-title gradient-text">Pick a quiz topic</h1>
+                <p class="page-subtitle">
+                    Recommended topics are based on your recent activity and saved keywords.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if stage == "select_topic" %}
+    <div class="search-container slide-up" style="margin-bottom: 2rem;">
+        <div class="search-box glass-panel">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="topicSearch" placeholder="Search topics (e.g. Data, Medical, Physics...)" onkeyup="filterTopics()">
+        </div>
+        <div id="searchSuggestions" class="search-suggestions"></div>
+    </div>
+    {% endif %}
+
+    {# ───────── STAGE: SELECT TOPIC ───────── #}
+    {% if stage == "select_topic" %}
+        <form method="post" id="topicForm" class="topic-grid">
+            <input type="hidden" name="stage" value="select_topic">
+            {% for t in topics %}
+                <label class="topic-card slide-up" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                    <input type="radio" name="topic" value="{{ t.name }}" required onchange="selectTopic(this)">
+                    <span class="topic-icon">{{ t.emoji }}</span>
+                    <span class="topic-name">{{ t.name }}</span>
+                </label>
+            {% endfor %}
+        </form>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button class="btn btn-primary" type="button" onclick="submitTopic()" id="nextBtn" disabled>
+                <span>Next: Choose Difficulty &rarr;</span>
+                <span class="btn-glow"></span>
+            </button>
+        </div>
+
+        <script>
+            function filterTopics() {
+                const input = document.getElementById('topicSearch');
+                const filter = input.value.toLowerCase();
+                const cards = document.querySelectorAll('.topic-card');
+                const suggestions = document.getElementById('searchSuggestions');
+                
+                let foundAny = false;
+                let matches = [];
+
+                cards.forEach(card => {
+                    const name = card.querySelector('.topic-name').innerText.toLowerCase();
+                    if (name.includes(filter)) {
+                        card.style.display = "";
+                        foundAny = true;
+                        if (filter.length > 0) matches.push(card.querySelector('.topic-name').innerText);
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                // Alphabetical recommendations / suggestions
+                if (filter.length > 0 && matches.length > 0) {
+                    suggestions.innerHTML = matches.slice(0, 5).map(m => `<span class="suggestion-tag" onclick="fillSearch('${m}')">${m}</span>`).join('');
+                    suggestions.style.display = "flex";
+                } else {
+                    suggestions.innerHTML = "";
+                    suggestions.style.display = "none";
+                }
+            }
+
+            function fillSearch(name) {
+                const input = document.getElementById('topicSearch');
+                input.value = name;
+                filterTopics();
+            }
+
+            function selectTopic(radio) {
+                // Remove active class from all
+                document.querySelectorAll('.topic-card').forEach(card => card.classList.remove('active'));
+                // Add active class to parent label
+                radio.parentElement.classList.add('active');
+                // Enable next button
+                document.getElementById('nextBtn').disabled = false;
+            }
+
+            function submitTopic() {
+                const form = document.getElementById('topicForm');
+                const selected = form.querySelector('input[name="topic"]:checked');
+                if (!selected) return;
+
+                // Simple "fade out" effect
+                document.querySelectorAll('.topic-card').forEach(card => {
+                    if (!card.classList.contains('active')) {
+                        card.classList.add('fade-out');
+                    }
+                });
+
+                setTimeout(() => {
+                    form.submit();
+                }, 300);
+            }
+        </script>
+
+    {# ───────── STAGE: SELECT DIFFICULTY ───────── #}
+    {% elif stage == "select_difficulty" %}
+        <form method="post" class="quiz-grid">
+            <input type="hidden" name="stage" value="select_difficulty">
+            <input type="hidden" name="topic" value="{{ topic }}">
+
+            <div class="quiz-card glass-subpanel slide-up difficulty-picker">
+                <label class="difficulty-card difficulty-easy-card">
+                    <input type="radio" name="difficulty" value="easy" required>
+                    <div class="diff-icon">&#128218;</div>
+                    <div class="diff-title">Easy</div>
+                </label>
+
+                <label class="difficulty-card difficulty-medium-card">
+                    <input type="radio" name="difficulty" value="medium">
+                    <div class="diff-icon">&#127979;</div>
+                    <div class="diff-title">Medium</div>
+                </label>
+
+                <label class="difficulty-card difficulty-hard-card">
+                    <input type="radio" name="difficulty" value="hard">
+                    <div class="diff-icon">&#128188;</div>
+                    <div class="diff-title">Hard</div>
+                </label>
+            </div>
+
+            <button class="btn btn-primary btn-full" type="submit">
+                <span>Start Quiz &rarr;</span>
+                <span class="btn-glow"></span>
+            </button>
+        </form>
+
+    {# ───────── STAGE: QUESTIONS ───────── #}
+    {% elif stage == "questions" %}
+        <style>
+            .quiz-grid { max-width: 100%; }
+            .quiz-step { 
+                background: none; 
+                border: none; 
+                padding: 0; 
+                border-radius: 0;
+            }
+            .quiz-question {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--text-base);
+                margin-bottom: 28px;
+                line-height: 1.6;
+            }
+            .quiz-options {
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+            .quiz-option {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 14px 18px;
+                border-radius: 10px;
+                border: 1px solid rgba(148,163,184,0.18);
+                cursor: pointer;
+                transition: border-color 0.2s, background 0.2s;
+                background: rgba(255,255,255,0.03);
+            }
+            .quiz-option:hover {
+                border-color: var(--accent);
+                background: rgba(99,102,241,0.08);
+            }
+            .quiz-option input[type="radio"] {
+                accent-color: var(--accent);
+                width: 18px; height: 18px;
+                flex-shrink: 0;
+            }
+            .quiz-option span {
+                font-size: 0.97rem;
+                color: var(--text-base);
+                line-height: 1.5;
+            }
+        </style>
+
+        <div class="quiz-progress-wrap">
+            <div class="quiz-progress-bar" id="quizProgressBar" style="width: 0%;"></div>
+        </div>
+        <p class="quiz-progress-label" id="quizProgressLabel">Question 1 of {{ questions|length }}</p>
+
+        <form method="post" id="quizForm" class="quiz-grid">
+            <input type="hidden" name="stage" value="answer_questions">
+            {% for q in questions %}
+                {% set q_index = loop.index0 %}
+                <div class="quiz-step{% if not loop.first %} quiz-hidden{% endif %}" id="quiz-step-{{ q_index }}">
+                    <div class="quiz-question">
+                        Q{{ loop.index }}. {{ q.text }}
+                    </div>
+                    <div class="quiz-options">
+                        {% for opt in q.options %}
+                            <label class="quiz-option">
+                                <input type="radio" name="q-{{ q_index }}" value="{{ loop.index0 }}" required>
+                                <span>{{ opt }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div class="quiz-nav-row">
+                        {% if not loop.last %}
+                            <button type="button" class="btn btn-primary" onclick="quizNext({{ q_index }})">
+                                <span>Next Question &rarr;</span>
+                                <span class="btn-glow"></span>
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">
+                                <span>Submit Answers (+20 XP) &#127881;</span>
+                                <span class="btn-glow"></span>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </form>
+
+        <script>
+            const totalQ = {{ questions|length }};
+
+            function updateProgress(currentIndex) {
+                const pct = Math.round(((currentIndex + 1) / totalQ) * 100);
+                document.getElementById('quizProgressBar').style.width = pct + '%';
+                document.getElementById('quizProgressLabel').textContent =
+                    'Question ' + (currentIndex + 1) + ' of ' + totalQ;
+            }
+
+            function quizNext(currentIndex) {
+                const radios = document.querySelectorAll('input[name="q-' + currentIndex + '"]');
+                const answered = [...radios].some(r => r.checked);
+                if (!answered) {
+                    const card = document.getElementById('quiz-step-' + currentIndex);
+                    card.style.border = '1.5px solid rgba(239, 68, 68, 0.7)';
+                    setTimeout(() => { card.style.border = ''; }, 1000);
+                    return;
+                }
+
+                const current = document.getElementById('quiz-step-' + currentIndex);
+                current.style.transition = 'opacity 0.3s';
+                current.style.opacity = '0';
+
+                setTimeout(() => {
+                    current.classList.add('quiz-hidden');
+                    current.style.opacity = '';
+                    current.style.transition = '';
+
+                    const next = document.getElementById('quiz-step-' + (currentIndex + 1));
+                    if (next) {
+                        next.classList.remove('quiz-hidden');
+                        next.style.opacity = '0';
+                        next.style.transition = 'opacity 0.35s';
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => { next.style.opacity = '1'; });
+                        });
+                        setTimeout(() => { next.style.transition = ''; next.style.opacity = ''; }, 400);
+                        updateProgress(currentIndex + 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }, 300);
+            }
+
+            updateProgress(0);
+        </script>
+    {% endif %}
+</div>
+{% endblock %}

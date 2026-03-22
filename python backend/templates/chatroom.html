@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ room }}{% endblock %}
+
+{% block content %}
+<div class="chat-layout" data-room="{{ room }}" data-username="{{ session.get('user') }}">
+    <div class="chat-main glass-subpanel">
+        <div class="chat-header">
+            <div>
+                <div class="chat-room-label">Room</div>
+                <h1 class="chat-room-name">{{ room }}</h1>
+            </div>
+            <div class="chat-room-hint">Messages are enriched with intent, category and keywords.</div>
+        </div>
+
+        <div id="chat" class="chat-box">
+            {% for m in messages %}
+                {% set is_bot = (m.sender == 'bot') %}
+                <div class="message {{ 'bot' if is_bot else 'user' }} message-static">
+                    <div class="message-meta">
+                        <span class="message-sender">{{ 'Academix AI' if is_bot else m.sender }}</span>
+                    </div>
+                    <div class="message-bubble">
+                        {{ m.text }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="input-area">
+            <input id="msg" placeholder="Ask a question or continue the conversation…" autocomplete="off">
+            <button id="send-btn" class="btn btn-primary">
+                <span>Send</span>
+                <span class="btn-glow"></span>
+            </button>
+        </div>
+    </div>
+
+    <aside class="chat-sidebar glass-subpanel slide-in-right">
+        <h2 class="sidebar-title">Room keywords</h2>
+        <p class="sidebar-subtitle">
+            Automatically extracted concepts that describe what this room is about.
+        </p>
+        <div id="keywords" class="keyword-list">
+            {% for k in keywords %}
+                <span class="keyword-chip">{{ k }}</span>
+            {% else %}
+                <p class="keyword-empty">Keywords will appear here as you chat.</p>
+            {% endfor %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

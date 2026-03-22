@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}University dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <h1 class="page-title gradient-text">Add materials</h1>
+    <p class="page-subtitle">Add learning materials for your subjects. Students can discover them by subject.</p>
+
+    <div class="dashboard-grid">
+        <div class="glass-panel card-form">
+            <h2 class="card-title">New material</h2>
+            <form method="post" action="{{ url_for('university_add_material') }}" class="material-form" enctype="multipart/form-data">
+                <label class="field">
+                    <span class="field-label">Subject</span>
+                    <select name="subject" required>
+                        <option value="">Select subject</option>
+                        {% for s in subjects %}
+                        <option value="{{ s }}">{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="field">
+                    <span class="field-label">Title</span>
+                    <input name="title" placeholder="Material title" required>
+                </label>
+                <label class="field">
+                    <span class="field-label">File (PDF or Word)</span>
+                    <input name="file" type="file" accept=".pdf,.doc,.docx" required>
+                    <span class="field-hint">Accepted: .pdf, .doc, .docx (max 25 MB)</span>
+                </label>
+                <label class="field">
+                    <span class="field-label">Description (optional)</span>
+                    <textarea name="content" rows="3" placeholder="Brief description of the material"></textarea>
+                </label>
+                <button class="btn btn-primary btn-full" type="submit">Add material</button>
+            </form>
+        </div>
+
+        <div class="glass-panel card-list">
+            <h2 class="card-title">Your materials</h2>
+            {% if materials %}
+            <ul class="material-list">
+                {% for m in materials %}
+                <li class="material-item">
+                    <span class="material-subject">{{ m.subject }}</span>
+                    <strong class="material-title">{{ m.title }}</strong>
+                    {% if m.filename %}
+                    <a href="{{ url_for('material_download', material_id=m.id) }}" class="material-link">Download ({{ m.original_filename or m.filename }})</a>
+                    {% endif %}
+                    {% if m.content %}
+                    <p class="material-content">{{ m.content }}</p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">No materials yet. Add one using the form.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-layout { max-width: 960px; margin: 0 auto; }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+@media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+.card-form .card-title, .card-list .card-title { margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; }
+.material-form .field { margin-bottom: 1rem; }
+.material-form select { width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: inherit; }
+.material-form textarea { width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: inherit; resize: vertical; }
+.material-form input[type="file"] { width: 100%; padding: 0.5rem; color: inherit; }
+.field-hint { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; }
+.material-list { list-style: none; padding: 0; margin: 0; }
+.material-item { padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.material-item:last-child { border-bottom: none; }
+.material-subject { font-size: 0.8rem; color: var(--accent, #7c3aed); text-transform: uppercase; letter-spacing: 0.05em; }
+.material-title { display: block; margin-top: 0.25rem; }
+.material-link { font-size: 0.9rem; color: var(--accent, #7c3aed); }
+.material-content { font-size: 0.9rem; color: rgba(255,255,255,0.7); margin-top: 0.5rem; }
+.empty-state { color: rgba(255,255,255,0.5); font-style: italic; }
+</style>
+{% endblock %}

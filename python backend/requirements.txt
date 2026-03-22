@@ -1,0 +1,8 @@
+flask
+pymongo
+transformers
+keybert
+sentence-transformers
+ollama
+gunicorn
+python-dotenv

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Rooms{% endblock %}
+
+{% block content %}
+<div class="rooms-layout">
+    <div class="rooms-header">
+        <div>
+            <h1 class="page-title gradient-text">Your rooms</h1>
+            <p class="page-subtitle">
+                Create focused spaces for each topic and let Academix AI keep the knowledge flowing.
+            </p>
+        </div>
+        <form method="post" action="{{ url_for('create_room') }}" class="inline-form pop-in">
+            <label class="field field-inline">
+                <span class="field-label">New room</span>
+                <input name="room" placeholder="e.g. Web dev study group" required>
+            </label>
+            <button class="btn btn-primary" type="submit">
+                <span>Create</span>
+                <span class="btn-glow"></span>
+            </button>
+        </form>
+    </div>
+
+    <section class="recommended-section">
+        <h2 class="section-title">Recommended for you</h2>
+        {% if recommended_rooms %}
+            <p class="section-subtitle">
+                Rooms that best match the topics you’ve been discussing.
+            </p>
+            <div class="room-grid">
+                {% for r in recommended_rooms %}
+                    <a href="{{ url_for('chatroom', room_name=r.name) }}" class="room-card hover-lift recommended-card">
+                        <div class="room-icon">{{ r.name[0]|upper }}</div>
+                        <div class="room-info">
+                            <div class="room-name">{{ r.name }}</div>
+                            <div class="room-meta">
+                                High match · based on {{ r.score }} of your keywords
+                            </div>
+                        </div>
+                        <div class="room-badge">Recommended</div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% elif other_rooms %}
+            <p class="section-subtitle">
+                Start exploring these rooms; as you chat, we’ll personalize this section to you.
+            </p>
+            <div class="room-grid">
+                {% for r in other_rooms %}
+                    <a href="{{ url_for('chatroom', room_name=r.name) }}" class="room-card hover-lift">
+                        <div class="room-icon">{{ r.name[0]|upper }}</div>
+                        <div class="room-info">
+                            <div class="room-name">{{ r.name }}</div>
+                            <div class="room-meta">You haven’t joined this room yet</div>
+                        </div>
+                        <div class="room-chevron">→</div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="section-subtitle">
+                There are no other rooms yet. Create a new room to get started.
+            </p>
+        {% endif %}
+    </section>
+
+    <div class="room-grid">
+        {% for r in rooms %}
+            <a href="{{ url_for('chatroom', room_name=r.name) }}" class="room-card hover-lift">
+                <div class="room-icon">{{ r.name[0]|upper }}</div>
+                <div class="room-info">
+                    <div class="room-name">{{ r.name }}</div>
+                    <div class="room-meta">Click to open conversation</div>
+                </div>
+                <div class="room-chevron">→</div>
+            </a>
+        {% else %}
+            <div class="empty-state fade-in">
+                <h3>No rooms yet</h3>
+                <p>Create your first room to start chatting with the AI assistant.</p>
+            </div>
+        {% endfor %}
+    </div>
+    <section class="recommended-section" style="margin-top: 12px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(15, 23, 42, 0.9)); border-color: rgba(168, 85, 247, 0.4);">
+        <h2 class="section-title">One of Your Future Path Ways</h2>
+        <p class="section-subtitle">
+            Highly interactive courses that are presently booming and will play a crucial role in the future.
+        </p>
+        <div class="room-grid feature-grid">
+            {% for pw in pathways %}
+            <div class="room-card hover-lift feature-card" style="cursor: pointer;"
+                 data-title="{{ pw.name }}" 
+                 data-desc="{{ pw.description }}" 
+                 data-links="{{ pw.links | tojson | forceescape }}"
+                 data-certs="{{ pw.certs | tojson | forceescape }}"
+                 onclick="openPathwayModal(this)">
+                <img src="{{ url_for('static', filename='images/' ~ pw.image) }}" class="feature-cover" alt="{{ pw.name }}">
+                <div class="room-info">
+                    <div class="room-name">{{ pw.name }}</div>
+                    <div class="room-meta">{{ pw.meta }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- Reactive Pathway Modal -->
+<div id="pathwayModal" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closePathwayModal()">
+    <div class="modal-content glass-panel">
+        <button class="modal-close" onclick="closePathwayModal()">&times;</button>
+        <h2 id="modalTitle" class="gradient-text" style="font-size: 1.5rem; margin-bottom: 8px;"></h2>
+        <div class="modal-body">
+            <h3>🌍 Real-World Use Cases</h3>
+            <p id="modalDesc"></p>
+            <h3>🔗 Helpful Resources</h3>
+            <ul id="modalLinks" class="resource-links"></ul>
+            <h3>🎓 Certification Courses</h3>
+            <ul id="modalCerts" class="resource-links cert-links"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPathwayModal(cardElement) {
+        document.getElementById('modalTitle').innerText = cardElement.getAttribute('data-title');
+        document.getElementById('modalDesc').innerText = cardElement.getAttribute('data-desc');
+        
+        const renderList = (elId, data) => {
+            const ul = document.getElementById(elId);
+            ul.innerHTML = '';
+            let items = [];
+            try { items = JSON.parse(data || '[]'); } catch(e) {}
+            items.forEach(l => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${l.url}" target="_blank">↳ ${l.label}</a>`;
+                ul.appendChild(li);
+            });
+        };
+
+        renderList('modalLinks', cardElement.getAttribute('data-links'));
+        renderList('modalCerts', cardElement.getAttribute('data-certs'));
+        
+        document.getElementById('pathwayModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closePathwayModal() {
+        document.getElementById('pathwayModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+</script>
+{% endblock %}

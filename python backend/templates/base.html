@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academix AI · {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="background-orbit orbit-1"></div>
+<div class="background-orbit orbit-2"></div>
+<div class="background-orbit orbit-3"></div>
+
+<div class="app-shell">
+    <header class="app-header">
+        <div class="app-brand">
+            <div class="brand-logo">A</div>
+            <div class="brand-text">
+                <div class="brand-title">Academix AI</div>
+                <div class="brand-subtitle">Conversational learning assistant</div>
+            </div>
+        </div>
+        <div class="app-header-actions">
+            {% if session.get("university") %}
+                <span class="user-pill">
+                    <span class="user-avatar">U</span>
+                    <span class="user-name">{{ session.get("university") }}</span>
+                </span>
+                <a href="{{ url_for('university_dashboard') }}" class="btn btn-ghost">Dashboard</a>
+                <a href="{{ url_for('university_logout') }}" class="btn btn-ghost">Logout</a>
+            {% elif session.get("user") %}
+                <span class="user-pill">
+                    <span class="user-avatar">{{ session.get("user")[0]|upper }}</span>
+                    <span class="user-name">
+                        {{ session.get("user") }}
+                        {% if xp is defined %}
+                            · {{ xp }} XP
+                        {% endif %}
+                    </span>
+                </span>
+                <a href="{{ url_for('quiz') }}" class="btn btn-ghost">Quiz</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-ghost">Logout</a>
+            {% else %}
+                <a href="{{ url_for('university_login') }}" class="btn btn-ghost">University login</a>
+                <a href="{{ url_for('login') }}" class="btn btn-ghost">Login</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="app-main">
+        <section class="glass-panel panel-animate-in">
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <span>Powered by intelligent NLP, embeddings &amp; LLMs.</span>
+    </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+</body>
+</html>

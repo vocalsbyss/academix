@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}University sign in{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="auth-intro">
+        <h1 class="page-title gradient-text">University portal</h1>
+        <p class="page-subtitle">
+            Sign in to add and manage materials for your subjects.
+        </p>
+    </div>
+
+    <form method="post" class="auth-card slide-up">
+        <h2 class="auth-title">Sign in</h2>
+
+        <label class="field">
+            <span class="field-label">University name</span>
+            <input name="name" placeholder="Your university name" required autocomplete="organization">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Password</span>
+            <input name="password" type="password" placeholder="Enter your password" required autocomplete="current-password">
+        </label>
+
+        <button class="btn btn-primary btn-full" type="submit">
+            <span>Login</span>
+            <span class="btn-glow"></span>
+        </button>
+
+        <p class="auth-switch">
+            Don't have an account?
+            <a href="{{ url_for('university_register') }}">Register your university</a>
+        </p>
+    </form>
+</div>
+{% endblock %}
